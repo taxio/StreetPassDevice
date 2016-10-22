@@ -29,7 +29,7 @@ class DeviceServer:
         HOST = self.inifile.get('settings','host')
         PORT = self.inifile.getint('settings','port')
         #サーバー立ち上げ
-        server = SocketServer.UDPServer((HOST, PORT), MyUDPHandler)
+        server = SocketServer.ThreadingUDPServer((HOST, PORT), MyUDPHandler)
         #割り込みループ
         server.serve_forever()
 
