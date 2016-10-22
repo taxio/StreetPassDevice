@@ -1,27 +1,29 @@
-# -*- coding:utf-8 -*-
-import socket
+#coding: utf-8
+#!/usr/bin/python
 
-host = "192.168.2.103" #お使いのサーバーのホスト名を入れます
-port = 50000 #クライアントと同じPORTをしてあげます
+import ConfigParser
+import SocketServer
 
-serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-serversock.bind((host,port)) #IPとPORTを指定してバインドします
-serversock.listen(10) #接続の待ち受けをします（キューの最大数を指定）
+inifile = ConfigParser.SafeConfigParser()
+inifile.read('./config.ini')
 
-print 'Waiting for connections...'
-clientsock, client_address = serversock.accept() #接続されればデータを格納
-print 'success connections!'
+#UDPサーバー割り込み処理
+class MyUDPHandler(SocketServer.BaseRequestHandler):
 
-while True:
-    rcvmsg = clientsock.recv(1024)
-    print 'Received -> %s' % (rcvmsg)
-    if rcvmsg == '':
-        break
-    s_msg = 'receved thanks.'
-    if s_msg == 's':
-        break
-    print 'Wait...'
-    clientsock.sendall(s_msg) #メッセージを返します
+    def handle(self):
+        data = self.request[0].strip()
+        socket = self.request[1]
+        print "{} wrote:".format(self.client_address[0])
+        print data
+        socket.sendto("ok", self.client_address)
 
-clientsock.close()
+
+if __name__ == "__main__":
+
+    #アドレスとポート指定
+    HOST = inifile.get('settings','host')
+    PORT = inifile.getint('settings','port')
+    #サーバー立ち上げ
+    server = SocketServer.UDPServer((HOST, PORT), MyUDPHandler)
+    #割り込みループ
+    server.serve_forever()
